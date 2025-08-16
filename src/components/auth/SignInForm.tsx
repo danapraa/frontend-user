@@ -98,7 +98,7 @@ export default function SignInForm() {
       const loginResponse = await apiBissaKerja.post("/login", payload);
 
       // Handle successful login
-      if (loginResponse.data.success || loginResponse.data.status === true) {
+      if (loginResponse.data.success || loginResponse.status === 200) {
         const user = loginResponse.data.user;
 
         if (user && user.role) {
@@ -129,8 +129,6 @@ export default function SignInForm() {
 
         // Refresh user data
         await refreshUser();
-
-        console.log("Login response:", loginResponse.data);
 
         router.push("/dashboard");
       }
