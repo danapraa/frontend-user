@@ -33,6 +33,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           command: |
+            export PATH=$PATH:/www/server/nvm/versions/node/v22.18.0/bin
             cd /www/wwwroot/frontend-user
             echo "📂 Sekarang ada di: $(pwd)"
 
@@ -40,17 +41,17 @@ jobs:
             rm -rf .next
 
             echo "📦 Install dependency (production)..."
-            /www/server/nvm/versions/node/v22.18.0/bin/npm install --production
+            npm install --production
 
             echo "🏗️ Build Next.js..."
-            /www/server/nvm/versions/node/v22.18.0/bin/npm run build
+            npm run build
 
             echo "⏹️ Stop PM2 lama..."
-            /www/server/nvm/versions/node/v22.18.0/bin/pm2 stop frontend-user || true
-            /www/server/nvm/versions/node/v22.18.0/bin/pm2 delete frontend-user || true
+            pm2 stop frontend-user || true
+            pm2 delete frontend-user || true
 
             echo "🚀 Start ulang PM2..."
-            /www/server/nvm/versions/node/v22.18.0/bin/pm2 start npm --name "frontend-user" -- run start
-            /www/server/nvm/versions/node/v22.18.0/bin/pm2 save
+            pm2 start npm --name "frontend-user" -- run start
+            pm2 save
 
             echo "✅ Deploy selesai!"
