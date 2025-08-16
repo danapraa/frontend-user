@@ -40,17 +40,17 @@ jobs:
             rm -rf .next
 
             echo "📦 Install dependency (production)..."
-            npm install --production
+            /www/server/nvm/versions/node/v22.18.0/bin/npm install --production
 
             echo "🏗️ Build Next.js..."
-            npm run build
+            /www/server/nvm/versions/node/v22.18.0/bin/npm run build
 
             echo "⏹️ Stop PM2 lama..."
-            pm2 stop frontend-user || true
-            pm2 delete frontend-user || true
+            /www/server/nvm/versions/node/v22.18.0/bin/pm2 stop frontend-user || true
+            /www/server/nvm/versions/node/v22.18.0/bin/pm2 delete frontend-user || true
 
             echo "🚀 Start ulang PM2..."
-            pm2 start npm --name "frontend-user" -- run start
-            pm2 save
+            /www/server/nvm/versions/node/v22.18.0/bin/pm2 start npm --name "frontend-user" -- run start
+            /www/server/nvm/versions/node/v22.18.0/bin/pm2 save
 
             echo "✅ Deploy selesai!"
