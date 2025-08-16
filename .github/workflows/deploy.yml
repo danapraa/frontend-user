@@ -23,7 +23,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js"
+          source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js,.env.production"
           target: /www/wwwroot/frontend-user
 
       - name: Build dan Running...
