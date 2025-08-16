@@ -30,7 +30,7 @@ jobs:
             tsconfig.json
             postcss.config.js
             .env.production
-          target: /www/wwwroot/fronted-user
+          target: /www/wwwroot/frontend-user
 
       # 3. Jalankan perintah di VPS
       - name: Deploy and Restart App
