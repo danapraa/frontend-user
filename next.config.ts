@@ -9,18 +9,18 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["ui-avatars.com", "localhost", "31.97.48.147"],
     remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-        pathname: "/storage/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000", // Add this for development
-        pathname: "/storage/**",
-      },
+      // {
+      //   protocol: "http",
+      //   hostname: "localhost",
+      //   port: "8000",
+      //   pathname: "/storage/**",
+      // },
+      // {
+      //   protocol: "http",
+      //   hostname: "localhost",
+      //   port: "3000", // Add this for development
+      //   pathname: "/storage/**",
+      // },
       {
         protocol: "http",
         hostname: "31.97.48.147",

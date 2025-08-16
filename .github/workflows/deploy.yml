@@ -40,6 +40,9 @@ jobs:
             echo "🗑️ Menghapus folder .next lama..."
             rm -rf .next
 
+             echo "🗑️ Menghapus folder .next lama..."
+            rm -rf node_modules
+
             echo "📦 Install dependency (production)..."
             npm install --production
 
