@@ -99,7 +99,6 @@ export default function SignInForm() {
 
       // Handle successful login
       if (loginResponse.data.success || loginResponse.status === 200) {
-        console.log(loginResponse);
         const user = loginResponse.data.user;
 
         if (user && user.role) {
