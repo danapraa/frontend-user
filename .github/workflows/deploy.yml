@@ -22,14 +22,14 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           source: "
-            public/*,
-            src/*,
-            ./package.json
-            ./package-lock.json
-            ./next.config.ts
-            ./tsconfig.json
-            ./postcss.config.js
-            ./.env.production"
+            frontend-user/public/*,
+            frontend-user/src/*,
+            frontend-user/package.json
+            frontend-user/package-lock.json
+            frontend-user/next.config.ts
+            frontend-user/tsconfig.json
+            frontend-user/postcss.config.js
+            frontend-user/.env.production"
           target: /www/wwwroot/frontend-user
           debug: true
 
