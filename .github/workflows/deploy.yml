@@ -26,10 +26,6 @@ jobs:
           source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js"
           target: /www/wwwroot/frontend-user
 
-      - name: Create .env.production
-        run: |
-          echo "NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}" >> .env.production
-          echo "NEXT_PUBLIC_BISSA_KERJA_API_URL=${{ secrets.NEXT_PUBLIC_BISSA_KERJA_API_URL }}" >> .env.production
       - name: Build dan Running...
         uses: garygrossgarten/github-action-ssh@release
         with:
@@ -40,6 +36,12 @@ jobs:
             export PATH=$PATH:/www/server/nvm/versions/node/v22.18.0/bin
             cd /www/wwwroot/frontend-user
             echo "📂 Sekarang ada di: $(pwd)"
+
+            echo "📝 Membuat .env.production..."
+            cat > .env.production <<EOL
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_BISSA_KERJA_API_URL=${{ secrets.NEXT_PUBLIC_BISSA_KERJA_API_URL }}
+            EOL
 
             echo "🗑️ Menghapus folder .next lama..."
             rm -rf .next
