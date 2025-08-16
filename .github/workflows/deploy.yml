@@ -17,7 +17,7 @@ jobs:
         run: ls -R
 
       - name: Copy source files to VPS
-        uses: appleboy/scp-action
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -27,14 +27,30 @@ jobs:
           target: /www/wwwroot/frontend-user
 
       - name: Build dan Running...
-        uses: appleboy/ssh-action
+        uses: garygrossgarten/github-action-ssh@release
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
-          script: |
+          command: |
             cd /www/wwwroot/frontend-user
+            echo "📂 Sekarang ada di: $(pwd)"
+
+            echo "🗑️ Menghapus folder .next lama..."
+            rm -rf .next
+
+            echo "📦 Install dependency (production)..."
             npm install --production
+
+            echo "🏗️ Build Next.js..."
             npm run build
+
+            echo "⏹️ Stop PM2 lama..."
+            pm2 stop frontend-user || true
+            pm2 delete frontend-user || true
+
+            echo "🚀 Start ulang PM2..."
             pm2 start npm --name "frontend-user" -- run start
             pm2 save
+
+            echo "✅ Deploy selesai!"
