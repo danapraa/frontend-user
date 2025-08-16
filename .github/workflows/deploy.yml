@@ -23,9 +23,13 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js,.env.production"
+          source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js"
           target: /www/wwwroot/frontend-user
 
+      - name: Create .env.production
+        run: |
+          echo "NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_BISSA_KERJA_API_URL=${{ secrets.NEXT_PUBLIC_BISSA_KERJA_API_URL }}" >> .env.production
       - name: Build dan Running...
         uses: garygrossgarten/github-action-ssh@release
         with:
