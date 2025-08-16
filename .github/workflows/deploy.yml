@@ -10,46 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Copy file source ke VPS (tanpa .next)
+      - name: Debug file structure
+        run: ls -R
+
       - name: Copy source files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
-          source: "
-            frontend-user/public/*,
-            frontend-user/src/*,
-            frontend-user/package.json
-            frontend-user/package-lock.json
-            frontend-user/next.config.ts
-            frontend-user/tsconfig.json
-            frontend-user/postcss.config.js
-            frontend-user/.env.production"
+          port: 22
+          source: "public,src,package.json,package-lock.json,next.config.ts,tsconfig.json,postcss.config.js"
           target: /www/wwwroot/frontend-user
-          debug: true
 
-      # 3. SSH ke VPS untuk install & build
-      - name: Install and restart app on VPS
+      - name: install & restart
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
           script: |
             cd /www/wwwroot/frontend-user
-
-            # install dependency (prod)
             npm install --production
-
-            # build Next.js
             npm run build
-
-            # restart pakai PM2
             pm2 stop frontend-user || true
             pm2 delete frontend-user || true
             pm2 start npm --name "frontend-user" -- run start
