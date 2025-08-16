@@ -24,12 +24,12 @@ jobs:
           source: "
             public/*,
             src/*,
-            package.json
-            package-lock.json
-            next.config.ts
-            tsconfig.json
-            postcss.config.js
-            .env.production"
+            ./package.json
+            ./package-lock.json
+            ./next.config.ts
+            ./tsconfig.json
+            ./postcss.config.js
+            ./.env.production"
           target: /www/wwwroot/frontend-user
           debug: true
 
