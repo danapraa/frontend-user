@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ["ui-avatars.com", "localhost"],
+    domains: ["ui-avatars.com", "localhost", "31.97.48.147"],
     remotePatterns: [
       {
         protocol: "http",
@@ -22,8 +22,9 @@ const nextConfig: NextConfig = {
         pathname: "/storage/**",
       },
       {
-        protocol: "https",
-        hostname: "your-production-domain.com",
+        protocol: "http",
+        hostname: "31.97.48.147",
+        port: "8000",
         pathname: "/storage/**",
       },
       {
@@ -34,17 +35,17 @@ const nextConfig: NextConfig = {
     ],
   },
 
-    //  webpack: (config) => {
-  //   config.resolve.alias["@"] = path.resolve(__dirname, "src");
-  //   return config;
-  // },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"],
-    });
+  webpack: (config) => {
+    config.resolve.alias["@"] = path.resolve(__dirname, "src");
     return config;
   },
+  //   webpack(config) {
+  //     config.module.rules.push({
+  //       test: /\.svg$/,
+  //       use: ["@svgr/webpack"],
+  //     });
+  //     return config;
+  //   },
 };
 
 export default nextConfig;
