@@ -1,0 +1,55 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main # jalan setiap push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout kode dari repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Copy file penting ke VPS
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: |
+            public
+            src
+            package.json
+            package-lock.json
+            next.config.ts
+            tsconfig.json
+            postcss.config.js
+            .env.production
+          target: /www/wwwroot/fronted-user
+
+      # 3. Jalankan perintah di VPS
+      - name: Deploy and Restart App
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /www/wwwroot/frontend-user
+
+            # install dependency production
+            npm install --production
+
+            # build project
+            npm run build
+
+            # restart PM2
+            pm2 stop frontend-user || true
+            pm2 delete frontend-user || true
+            pm2 start npm --name "frontend-user" -- run start
+            pm2 save
