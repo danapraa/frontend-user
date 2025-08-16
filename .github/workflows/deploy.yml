@@ -17,7 +17,7 @@ jobs:
         run: ls -R
 
       - name: Copy source files to VPS
-        uses: appleboy/scp-action@v1.2.2
+        uses: appleboy/scp-action@latest
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -27,7 +27,7 @@ jobs:
           target: /www/wwwroot/frontend-user
 
       - name: Build dan Running...
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@latest
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
