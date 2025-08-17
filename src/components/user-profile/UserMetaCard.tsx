@@ -46,57 +46,64 @@ interface FormErrors {
 }
 
 // Constants
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // Custom Password Input Component (moved outside to prevent re-creation)
-const PasswordInput = React.memo(({ 
-  id, 
-  value, 
-  onChange, 
-  placeholder, 
-  disabled, 
-  showPassword, 
-  onTogglePassword 
-}: {
-  id: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
-  disabled: boolean;
-  showPassword: boolean;
-  onTogglePassword: () => void;
-}) => (
-  <div className="relative">
-    <Input
-      id={id}
-      type={showPassword ? "text" : "password"}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      disabled={disabled}
-      className="pr-10"
-    />
-    <button
-      type="button"
-      onClick={onTogglePassword}
-      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-      disabled={disabled}
-    >
-      {showPassword ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
-    </button>
-  </div>
-));
+const PasswordInput = React.memo(
+  ({
+    id,
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    showPassword,
+    onTogglePassword,
+  }: {
+    id: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    disabled: boolean;
+    showPassword: boolean;
+    onTogglePassword: () => void;
+  }) => (
+    <div className="relative">
+      <Input
+        id={id}
+        type={showPassword ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={onTogglePassword}
+        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        disabled={disabled}
+      >
+        {showPassword ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  )
+);
 
-PasswordInput.displayName = 'PasswordInput';
+PasswordInput.displayName = "PasswordInput";
 
 export default function UserProfileCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  
+
   // State
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,12 +113,12 @@ export default function UserProfileCard() {
   const [successMessage, setSuccessMessage] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
-  
+
   // Password visibility states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<FormData>({
@@ -151,7 +158,9 @@ export default function UserProfileCard() {
       setErrors(error.response.data.errors);
     } else {
       setErrors({
-        general: [error.response?.data?.message || error.message || fallbackMessage]
+        general: [
+          error.response?.data?.message || error.message || fallbackMessage,
+        ],
       });
     }
   }, []);
@@ -168,18 +177,22 @@ export default function UserProfileCard() {
       // Handle backend response structure
       if (response.data?.status && response.data?.user) {
         userData = response.data.user;
-      if (response.data.role && userData) {
-        userData.role = response.data.role;
-      }
+        if (response.data.role && userData) {
+          userData.role = response.data.role;
+        }
       } else if (response.data?.success && response.data?.data) {
         userData = response.data.data;
-      } else if (response.data && typeof response.data === 'object' && 'id' in response.data) {
+      } else if (
+        response.data &&
+        typeof response.data === "object" &&
+        "id" in response.data
+      ) {
         userData = response.data as User;
       }
 
       if (userData && userData.id) {
         setUser(userData);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: userData.name || "",
           email: userData.email || "",
@@ -217,40 +230,43 @@ export default function UserProfileCard() {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
+        if (typeof reader.result === "string") {
           resolve(reader.result);
         } else {
-          reject(new Error('Failed to convert file to base64'));
+          reject(new Error("Failed to convert file to base64"));
         }
       };
-      reader.onerror = () => reject(new Error('File reading failed'));
+      reader.onerror = () => reject(new Error("File reading failed"));
       reader.readAsDataURL(file);
     });
   }, []);
 
   // Handle file selection
-  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    const error = validateFile(file);
-    if (error) {
-      setErrors({ avatar: [error] });
-      return;
-    }
+      const error = validateFile(file);
+      if (error) {
+        setErrors({ avatar: [error] });
+        return;
+      }
 
-    // Clear previous errors
-    setErrors(prev => ({ ...prev, avatar: undefined }));
+      // Clear previous errors
+      setErrors((prev) => ({ ...prev, avatar: undefined }));
 
-    try {
-      // Convert to base64 for preview
-      const base64String = await fileToBase64(file);
-      setAvatarPreview(base64String);
-    } catch (error) {
-      console.error('Error converting file to base64:', error);
-      setErrors({ avatar: ['Failed to process image'] });
-    }
-  }, [validateFile, fileToBase64]);
+      try {
+        // Convert to base64 for preview
+        const base64String = await fileToBase64(file);
+        setAvatarPreview(base64String);
+      } catch (error) {
+        console.error("Error converting file to base64:", error);
+        setErrors({ avatar: ["Failed to process image"] });
+      }
+    },
+    [validateFile, fileToBase64]
+  );
 
   // Handle avatar upload using base64
   const handleAvatarUpload = useCallback(async () => {
@@ -258,24 +274,21 @@ export default function UserProfileCard() {
 
     try {
       setAvatarLoading(true);
-      setErrors(prev => ({ ...prev, avatar: undefined }));
+      setErrors((prev) => ({ ...prev, avatar: undefined }));
 
-      const response = await apiBissaKerja.patch<ApiResponse<User>>(
+      const response = await apiBissaKerja.put<ApiResponse<User>>(
         "/profile/update-avatar",
         {
-          avatar: avatarPreview // Send base64 data
+          avatar: avatarPreview,
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          timeout: 60000, // Increase timeout untuk base64
         }
       );
 
-
       if (response.data.status || response.data.success) {
         showSuccess("Profile photo updated successfully!");
-        
+
         // Update user state based on response structure
         if (response.data.user) {
           setUser(response.data.user);
@@ -292,26 +305,40 @@ export default function UserProfileCard() {
         throw new Error(response.data.message || "Upload failed");
       }
     } catch (error: any) {
-      handleError(error, "Failed to update profile photo. Please try again.");
+      console.error("Avatar upload error:", error);
+
+      // Handle CORS error specifically
+      if (error.code === "ERR_NETWORK" || error.message.includes("CORS")) {
+        setErrors({
+          avatar: [
+            "Network error. Please check your connection and try again.",
+          ],
+        });
+      } else {
+        handleError(error, "Failed to update profile photo. Please try again.");
+      }
     } finally {
       setAvatarLoading(false);
     }
   }, [avatarPreview, handleError, showSuccess]);
 
   // Handle input changes
-  const handleInputChange = useCallback((field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear specific field error without recreating the function
-    setErrors(prev => {
-      if (prev[field]) {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      }
-      return prev;
-    });
-  }, []);
+  const handleInputChange = useCallback(
+    (field: keyof FormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear specific field error without recreating the function
+      setErrors((prev) => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
+    },
+    []
+  );
 
   // Form validation
   const validateForm = useCallback((): boolean => {
@@ -334,13 +361,17 @@ export default function UserProfileCard() {
     // Password validation (only if changing password)
     if (showPasswordFields && formData.password) {
       if (!formData.current_password) {
-        newErrors.current_password = ["Current password is required when updating password"];
+        newErrors.current_password = [
+          "Current password is required when updating password",
+        ];
       }
       if (formData.password.length < 6) {
         newErrors.password = ["Password must be at least 6 characters"];
       }
       if (formData.password !== formData.password_confirmation) {
-        newErrors.password_confirmation = ["Password confirmation does not match"];
+        newErrors.password_confirmation = [
+          "Password confirmation does not match",
+        ];
       }
     }
 
@@ -356,7 +387,7 @@ export default function UserProfileCard() {
       setSaveLoading(true);
       clearMessages();
 
-      const updateData: Partial<FormData> = {
+      const updateData: any = {
         name: formData.name.trim(),
         email: formData.email.trim(),
       };
@@ -368,14 +399,16 @@ export default function UserProfileCard() {
         updateData.password_confirmation = formData.password_confirmation;
       }
 
-      const response = await apiBissaKerja.patch<ApiResponse<User>>(
+      const response = await apiBissaKerja.put<ApiResponse<User>>(
         "/profile",
         updateData
       );
 
-
       if (response.data.status || response.data.success) {
-        showSuccess(response.data.message || "Profile updated successfully!", 1500);
+        showSuccess(
+          response.data.message || "Profile updated successfully!",
+          1500
+        );
 
         // Update user state based on response structure
         if (response.data.user) {
@@ -385,7 +418,7 @@ export default function UserProfileCard() {
         }
 
         // Reset password fields
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           current_password: "",
           password: "",
@@ -407,13 +440,13 @@ export default function UserProfileCard() {
       setSaveLoading(false);
     }
   }, [
-    validateForm, 
-    formData, 
-    showPasswordFields, 
-    clearMessages, 
-    showSuccess, 
-    handleError, 
-    closeModal
+    validateForm,
+    formData,
+    showPasswordFields,
+    clearMessages,
+    showSuccess,
+    handleError,
+    closeModal,
   ]);
 
   // Handle modal close
@@ -424,19 +457,19 @@ export default function UserProfileCard() {
     clearMessages();
     setShowPasswordFields(false);
     setAvatarPreview(null);
-    
+
     // Reset password visibility states
     setShowCurrentPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
     // Reset form to user data
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: user.name,
         email: user.email,
@@ -451,21 +484,21 @@ export default function UserProfileCard() {
   const getAvatarSrc = useCallback(() => {
     // If there's a preview (user is selecting new image), show that
     if (avatarPreview) return avatarPreview;
-    
+
     // If user has an uploaded avatar and it's a valid URL, use it
     if (user?.avatar && user.avatar.trim()) {
       // Check if it's a full URL (starts with http/https)
-      if (user.avatar.startsWith('http')) {
+      if (user.avatar.startsWith("http")) {
         return user.avatar;
       }
       // If it's a relative path, convert to absolute using the API base URL
-      if (user.avatar.startsWith('/storage/')) {
+      if (user.avatar.startsWith("/storage/")) {
         // Get the base URL from your API configuration
-        const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL ;
+        const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
         return `${apiBaseUrl}${user.avatar}`;
       }
     }
-    
+
     // Fallback to generated avatar based on user name
     return generateDefaultAvatar(user?.name || "User");
   }, [avatarPreview, user?.avatar, user?.name, generateDefaultAvatar]);
@@ -524,9 +557,14 @@ export default function UserProfileCard() {
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   // If image fails to load, use the generated default avatar
-                  (e.target as HTMLImageElement).src = generateDefaultAvatar(user.name || "User");
+                  (e.target as HTMLImageElement).src = generateDefaultAvatar(
+                    user.name || "User"
+                  );
                 }}
-                unoptimized={getAvatarSrc().startsWith('data:') || getAvatarSrc().includes('ui-avatars.com')}
+                unoptimized={
+                  getAvatarSrc().startsWith("data:") ||
+                  getAvatarSrc().includes("ui-avatars.com")
+                }
               />
             </div>
             <div className="order-3 xl:order-2">
@@ -617,9 +655,13 @@ export default function UserProfileCard() {
                         alt="Profile picture"
                         className="object-cover w-full h-full"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = generateDefaultAvatar(user.name || "User");
+                          (e.target as HTMLImageElement).src =
+                            generateDefaultAvatar(user.name || "User");
                         }}
-                        unoptimized={getAvatarSrc().startsWith('data:') || getAvatarSrc().includes('ui-avatars.com')}
+                        unoptimized={
+                          getAvatarSrc().startsWith("data:") ||
+                          getAvatarSrc().includes("ui-avatars.com")
+                        }
                       />
                     </div>
                     <div className="flex-1">
@@ -715,15 +757,24 @@ export default function UserProfileCard() {
                   {showPasswordFields && (
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="current_password">Password Saat ini</Label>
+                        <Label htmlFor="current_password">
+                          Password Saat ini
+                        </Label>
                         <PasswordInput
                           id="current_password"
                           value={formData.current_password}
-                          onChange={(e) => handleInputChange("current_password", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "current_password",
+                              e.target.value
+                            )
+                          }
                           placeholder="Password saat ini"
                           disabled={saveLoading}
                           showPassword={showCurrentPassword}
-                          onTogglePassword={() => setShowCurrentPassword(prev => !prev)}
+                          onTogglePassword={() =>
+                            setShowCurrentPassword((prev) => !prev)
+                          }
                         />
                         {errors.current_password && (
                           <p className="mt-1 text-sm text-red-600">
@@ -737,11 +788,15 @@ export default function UserProfileCard() {
                         <PasswordInput
                           id="password"
                           value={formData.password}
-                          onChange={(e) => handleInputChange("password", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("password", e.target.value)
+                          }
                           placeholder="Masukkan password baru (min. 6 karakter)"
                           disabled={saveLoading}
                           showPassword={showNewPassword}
-                          onTogglePassword={() => setShowNewPassword(prev => !prev)}
+                          onTogglePassword={() =>
+                            setShowNewPassword((prev) => !prev)
+                          }
                         />
                         {errors.password && (
                           <p className="mt-1 text-sm text-red-600">
@@ -757,11 +812,18 @@ export default function UserProfileCard() {
                         <PasswordInput
                           id="password_confirmation"
                           value={formData.password_confirmation}
-                          onChange={(e) => handleInputChange("password_confirmation", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "password_confirmation",
+                              e.target.value
+                            )
+                          }
                           placeholder="Konfirmasi password baru"
                           disabled={saveLoading}
                           showPassword={showConfirmPassword}
-                          onTogglePassword={() => setShowConfirmPassword(prev => !prev)}
+                          onTogglePassword={() =>
+                            setShowConfirmPassword((prev) => !prev)
+                          }
                         />
                         {errors.password_confirmation && (
                           <p className="mt-1 text-sm text-red-600">
