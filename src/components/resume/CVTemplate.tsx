@@ -203,17 +203,17 @@ const CVTemplate = () => {
     // If userData exists and has an avatar
     if (userData?.avatar && userData.avatar.trim()) {
       // Check if it's a full URL (starts with http/https)
-      if (userData.avatar.startsWith('http')) {
+      if (userData.avatar.startsWith("http")) {
         return userData.avatar;
       }
       // If it's a relative path, convert to absolute using the API base URL
-      if (userData.avatar.startsWith('/storage/')) {
+      if (userData.avatar.startsWith("/storage/")) {
         // Get the base URL from your API configuration
         const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
         return `${apiBaseUrl}${userData.avatar}`;
       }
     }
-    
+
     // Fallback to default avatar
     return generateDefaultAvatar(userData?.name || "User");
   }, [userData, generateDefaultAvatar]);
@@ -227,22 +227,22 @@ const CVTemplate = () => {
   const handleRemoveCV = async () => {
     try {
       setDeleteLoading(true);
-      
-      const response = await apiBissaKerja.delete('/resume/detele/cv');
-      
+
+      const response = await apiBissaKerja.delete("/resume/detele/cv");
+
       if (response.status === 201) {
         setUserData(null);
         setShowDeleteModal(false);
         Cookies.set("userProfile", "false");
-        window.location.href = '/resume';
+        window.location.href = "/resume";
       }
     } catch (error: any) {
-      console.error('Error deleting CV:', error);
-      alert('Gagal menghapus CV. Silakan coba lagi.');
+      console.error("Error deleting CV:", error);
+      alert("Gagal menghapus CV. Silakan coba lagi.");
     } finally {
       setDeleteLoading(false);
     }
-  }
+  };
 
   const fetchDataResume = async () => {
     try {
@@ -252,7 +252,6 @@ const CVTemplate = () => {
       }
 
       const userId = user.id;
-      console.log(useId);
       const response = await apiBissaKerja.get(`/resume/${userId}`);
       setUserData(response.data.data);
     } catch (error: any) {
@@ -392,7 +391,8 @@ const CVTemplate = () => {
                 </div>
 
                 <div className="flex items-center justify-center md:justify-start gap-2">
-                  {userData?.user_profile?.disabilitas?.kategori_disabilitas && (
+                  {userData?.user_profile?.disabilitas
+                    ?.kategori_disabilitas && (
                     <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
                       {userData.user_profile.disabilitas.kategori_disabilitas}
                     </span>
@@ -444,10 +444,9 @@ const CVTemplate = () => {
                   Tanggal Lahir:
                 </span>
                 <span className="ml-2 text-gray-700 dark:text-gray-300">
-                  {userData?.user_profile?.tanggal_lahir 
+                  {userData?.user_profile?.tanggal_lahir
                     ? formatFullDate(userData.user_profile.tanggal_lahir)
-                    : "Tidak tersedia"
-                  }
+                    : "Tidak tersedia"}
                 </span>
               </div>
               <div>

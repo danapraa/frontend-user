@@ -65,7 +65,6 @@ const SkillsForm = () => {
       // Check if localStorage is available
       if (typeof window !== "undefined" && window.localStorage) {
         localStorage.removeItem(STORAGE_KEY);
-        console.log("localStorage cleared");
       } else {
         console.log("localStorage cleared (simulated)");
       }
@@ -214,9 +213,6 @@ const SkillsForm = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setSuccessMessage("Data keterampilan berhasil disimpan");
-
-      // Log the exact format for verification
-      console.log("Data yang disimpan:", submitData);
     } catch (error: any) {
       console.error("Error saving skills data to localStorage:", error);
       setErrors({

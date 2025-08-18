@@ -415,7 +415,6 @@ const AchievementForm = () => {
     localStorage.removeItem("skills_form_data");
     localStorage.removeItem("language_skills_form_data");
     localStorage.removeItem("achievement_form_data");
-    console.log("All form localStorage data cleared");
   };
 
   const handleCreateCV = async () => {
@@ -436,7 +435,6 @@ const AchievementForm = () => {
 
       // PERBAIKAN: Selalu simpan ke localStorage, bahkan jika kosong
       // Karena fungsi storeAchievementForm akan mengecek apakah ada data atau tidak
-      console.log("Saving achievement data to localStorage:", submitData);
       saveToLocalStorage(submitData);
 
       // Execute each step with progress tracking
@@ -459,7 +457,7 @@ const AchievementForm = () => {
 
         try {
           await step.fn();
-          console.log(`${step.id} step completed successfully`);
+          // console.log(`${step.id} step completed successfully`);
         } catch (error) {
           console.error(`Error in ${step.id} step:`, error);
           // Continue with other steps even if one fails

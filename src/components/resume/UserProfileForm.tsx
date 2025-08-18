@@ -155,14 +155,10 @@ const UserProfileForm = () => {
   ) => {
     const { name, value } = e.target;
 
-    console.log("Input change:", { name, value }); // Debug log
-
     const updatedData = {
       ...formData,
       [name]: value,
     };
-
-    console.log("Updated form data:", updatedData); // Debug log
 
     setFormData(updatedData);
 
@@ -257,8 +253,6 @@ const UserProfileForm = () => {
         disabilitas_id: Number(formData.disabilitas_id),
         user_id: Number(formData.user_id),
       };
-
-      console.log("Data to be saved:", submitData); // Debug log
 
       // Save to localStorage instead of API
       saveToLocalStorage(submitData);

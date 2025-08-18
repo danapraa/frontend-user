@@ -83,7 +83,6 @@ const CertificationForm = () => {
       const savedData = localStorage.getItem(STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log("Certification data loaded from localStorage:", parsedData);
         return parsedData;
       }
     } catch (error) {
@@ -99,7 +98,6 @@ const CertificationForm = () => {
   const saveToLocalStorage = (data: any) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log("Certification data saved to localStorage:", data);
     } catch (error) {
       console.error("Error saving certification data to localStorage:", error);
     }
