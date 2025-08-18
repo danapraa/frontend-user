@@ -138,11 +138,7 @@ export default function SignUpForm() {
         role: role,
       };
 
-      console.log("Sending registration payload:", payload);
-
       const response = await apiBissaKerja.post(`/register`, payload);
-
-      console.log("Registration response:", response);
 
       // Check if registration was successful
       // Handle different possible response formats
@@ -414,7 +410,7 @@ export default function SignUpForm() {
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                       ) : (
-                        ''
+                        ""
                         // <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
                       )}
                     </span>
