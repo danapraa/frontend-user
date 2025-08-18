@@ -4,7 +4,10 @@ import Cookies from "js-cookie";
 
 const token = Cookies.get("token");
 const apiBissaKerja = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BISSA_KERJA_API_URL,
+  baseURL:
+    process.env.NEXT_PUBLIC_BISSA_KERJA_API_URL ||
+    "http://31.97.48.147:8000/api",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
