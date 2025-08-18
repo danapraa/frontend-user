@@ -205,6 +205,13 @@ export default function ProfilePerusahaan() {
     loadData();
   }, []);
 
+  // Auto redirect when no company profile is detected
+  useEffect(() => {
+    if (hasCompanyProfile === false && !isLoading && !error) {
+      router.push("/profile-perusahaan/form");
+    }
+  }, [hasCompanyProfile, isLoading, error, router]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -235,7 +242,7 @@ export default function ProfilePerusahaan() {
 
         // Handle different types of errors
         if (companyError.response?.status === 404) {
-          // Profile doesn't exist - this is normal
+          // Profile doesn't exist - this is normal, redirect to form
           setCompanyData(null);
           setHasCompanyProfile(false);
         } else if (companyError.response?.status === 401) {
@@ -443,7 +450,8 @@ export default function ProfilePerusahaan() {
     );
   }
 
-  // Show empty state if no company data but user data is loaded
+  // Show redirecting message when no company profile exists
+  // This will be briefly shown before redirect happens
   if (hasCompanyProfile === false || !companyData) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -451,28 +459,15 @@ export default function ProfilePerusahaan() {
         <div className="space-y-6">
           <ComponentCard title="Profile Perusahaan">
             <div className="text-center py-12">
-              <Building size={48} className="mx-auto text-gray-400 mb-4" />
+              <Building size={48} className="mx-auto text-blue-400 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Profile Perusahaan Belum Lengkap
+                Mengalihkan ke Form Profile...
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Silakan lengkapi informasi perusahaan Anda untuk menampilkan
-                profile yang menarik bagi pencari kerja.
+                Profile perusahaan belum lengkap. Anda akan dialihkan ke halaman
+                pengisian form.
               </p>
-              <button
-                onClick={() => router.push("/profile-perusahaan/form")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              >
-                <Edit2 size={16} />
-                Lengkapi Profile
-              </button>
-              {userData && (
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Akun:</strong> {userData.name} ({userData.email})
-                  </p>
-                </div>
-              )}
+              <div className="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto"></div>
             </div>
           </ComponentCard>
         </div>
