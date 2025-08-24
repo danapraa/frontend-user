@@ -8,13 +8,13 @@ export default function Footer() {
               <div className="lg:col-span-2">
                 <div className="flex items-center space-x-2 mb-3 sm:mb-4">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-xs sm:text-sm">IK</span>
+                    <span className="text-white font-bold text-xs sm:text-sm">JB</span>
                   </div>
-                  <span className="text-lg sm:text-xl font-bold">InklusifKerja</span>
+                  <span className="text-lg sm:text-xl font-bold">Jatim Bissa</span>
                 </div>
                 <p className="text-gray-400 leading-relaxed mb-4 sm:mb-6 max-w-md text-sm sm:text-base">
-                  Platform inklusif yang menghubungkan penyandang disabilitas dengan peluang karier terbaik. 
-                  Bersama-sama kita wujudkan dunia kerja yang lebih inklusif dan berkelanjutan.
+                  JATIM BISSA (Basis Data Disabilitas Berdaya) merupakan platform jaringan kerja antara 
+                  penyandang disabilitas dan perusahaan.
                 </p>
                 <div className="flex space-x-3 sm:space-x-4">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-300 cursor-pointer">
@@ -60,16 +60,10 @@ export default function Footer() {
             <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8">
               <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <p className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
-                  © 2025 InklusifKerja. Seluruh hak cipta dilindungi.
+                  © 2025 Jatim Bissa. Seluruh hak cipta dilindungi.
                 </p>
                 <div className="flex items-center space-x-4 sm:space-x-6">
-                  <span className="text-gray-400 text-xs sm:text-sm">Powered by</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">AI</span>
-                    </div>
-                    <span className="text-gray-400 text-xs sm:text-sm">Accessibility Tech</span>
-                  </div>
+                  <span className="text-gray-400 text-xs sm:text-sm">Powered by Telkom University Surabaya</span>
                 </div>
               </div>
             </div>

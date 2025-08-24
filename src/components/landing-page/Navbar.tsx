@@ -64,10 +64,10 @@ export default function Navbar() {
                     <div className="flex-shrink-0">
                         <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand-500 hover:bg-brand-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-xs sm:text-sm">IK</span>
+                                <span className="text-white font-bold text-xs sm:text-sm">JB</span>
                             </div>
                             <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hidden xs:block">
-                                InklusifKerja
+                                Jatim Bissa
                             </span>
                         </div>
                     </div>

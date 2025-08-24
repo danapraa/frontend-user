@@ -19,7 +19,17 @@ import {
   CheckCircle,
   UserPlus,
   Search,
-  Send
+  Send,
+  // Import icon-icon baru yang disability-friendly
+  Heart,
+  HandHeart,
+  Accessibility,
+  Eye,
+  Ear,
+  UserCheck,
+  ClipboardCheck,
+  Target,
+  Mail
 } from 'lucide-react';
 
 const LandingPage = () => {
@@ -126,17 +136,16 @@ const LandingPage = () => {
                   <h1 
                     id="hero-heading"
                     className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
-                    aria-label="Temukan Karier Impian Anda - Platform inklusif untuk penyandang disabilitas"
+                    aria-label="Jatim Bissa - Solusi Ketenagakerjaan bagi Penyandang Disabilitas"
                   >
-                    Temukan Karier
-                    <span className="text-brand-500 dark:text-brand-400"> Impian</span> Anda
+                    Jatim Bissa
                   </h1>
                   <p 
                     className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0"
-                    aria-label="Platform inklusif yang menghubungkan penyandang disabilitas dengan perusahaan yang peduli. Wujudkan karier gemilang dengan dukungan teknologi yang accessibility-friendly."
+                    aria-label="JATIM BISSA (Basis Data Disabilitas Berdaya) merupakan platform jaringan kerja antara penyandang disabilitas dan perusahaan. Platform ini dikembangkan atas kerjasama dari Disnakertrans Provinsi Jawa Timur, Komisi Nasional Disabilitas, dan Universitas Telkom Surabaya"
                   >
-                    Platform inklusif yang menghubungkan penyandang disabilitas dengan perusahaan yang peduli. 
-                    Wujudkan karier gemilang dengan dukungan teknologi yang accessibility-friendly.
+                    JATIM BISSA (Basis Data Disabilitas Berdaya) merupakan platform jaringan kerja antara penyandang disabilitas dan perusahaan. 
+                    Platform ini dikembangkan atas kerjasama dari Disnakertrans Provinsi Jawa Timur, Komisi Nasional Disabilitas, dan Universitas Telkom Surabaya.
                   </p>
                 </header>
                 
@@ -196,7 +205,7 @@ const LandingPage = () => {
                     </div>
                     <div className="flex items-center space-x-3" aria-label="Komunitas inklusif - Dukungan penuh">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" aria-hidden="true" />
+                        <HandHeart className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" aria-hidden="true" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">Komunitas Inklusif</h3>
@@ -234,27 +243,27 @@ const LandingPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" role="list" aria-label="Kategori pengguna platform">
               {[
                 {
-                  icon: <Users className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <Accessibility className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Penyandang Disabilitas",
-                  description: "Temukan peluang karier yang sesuai dengan kemampuan dan minat Anda",
+                  description: "Akses lowongan kerja khusus untuk penyandang disabilitas, mendapatkan infomasi dari pemerintah untuk meningkatkan keterampilan kerja.",
                   color: "bg-blue-500"
                 },
                 {
                   icon: <Building2 className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Perusahaan",
-                  description: "Rekrut talenta terbaik dan bangun tim yang beragam dan inklusif",
+                  description: "Mempermudah pencarian talenta penyandang disabilitas, serta meningkatkan citra perusahaan sebagai pendukung lowongan kerja ramah penyandang disabilitas.",
                   color: "bg-green-500"
                 },
                 {
                   icon: <FileText className="w-6 h-6 sm:w-8 sm:h-8" />,
-                  title: "Disnaker",
-                  description: "Dinas Ketenagakerjaan untuk mengawasi dan memfasilitasi program inklusif",
+                  title: "Disnakertrans Jatim",
+                  description: "Memberikan informasi terkini terkait ketenagakerjaan, serta menurunkan tingkat pengangguran penyandang disabilitas",
                   color: "bg-purple-500"
                 },
                 {
-                  icon: <Shield className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <HandHeart className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Komnas Disabilitas",
-                  description: "Komisi Nasional Disabilitas untuk advokasi dan perlindungan hak",
+                  description: "Memberikan layanan kepada penyandang disabilitas agar dapat memperoleh pekerjaan yang sesuai dengan keterampilannya",
                   color: "bg-red-500"
                 }
               ].map((card, index) => (
@@ -344,25 +353,25 @@ const LandingPage = () => {
               {[
                 {
                   step: "01",
-                  icon: <UserPlus className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <UserCheck className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Buat Akun",
                   description: "Daftar dengan mudah menggunakan email atau media sosial"
                 },
                 {
                   step: "02",
-                  icon: <FileText className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <ClipboardCheck className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Lengkapi Profil",
                   description: "Isi data diri, keahlian, dan preferensi aksesibilitas"
                 },
                 {
                   step: "03",
-                  icon: <Search className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <Target className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Cari Pekerjaan",
                   description: "Gunakan filter canggih untuk menemukan pekerjaan ideal"
                 },
                 {
                   step: "04",
-                  icon: <Send className="w-6 h-6 sm:w-8 sm:h-8" />,
+                  icon: <Mail className="w-6 h-6 sm:w-8 sm:h-8" />,
                   title: "Lamar Pekerjaan",
                   description: "Kirim lamaran dengan satu klik dan pantau statusnya"
                 }
