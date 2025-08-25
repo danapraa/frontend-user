@@ -300,8 +300,6 @@ const LocationForm = () => {
   ) => {
     const { name, value } = e.target;
 
-    console.log("Input change:", { name, value });
-
     const updatedData = {
       ...formData,
       [name]: value,

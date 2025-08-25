@@ -12,7 +12,6 @@ export default function Profile() {
   useEffect(() => {
     try {
       const role = Cookies.get("role");
-      console.log("Role from cookie:", role);
 
       // Check if role exists and equals "perusahaan"
       const isCompany = role === "perusahaan" || role === "company";

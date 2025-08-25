@@ -109,7 +109,7 @@ const UserProfileForm = () => {
       setError(null);
       const response = await apiBK.get<DisabilitasResponse>("/disability");
 
-      if (response.data.status && response.data.data) {
+      if (response.data.data) {
         setDisabilitasOptions(response.data.data);
       } else {
         setError("Gagal mengambil data disabilitas");
