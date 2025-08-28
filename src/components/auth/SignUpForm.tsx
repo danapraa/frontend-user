@@ -244,15 +244,15 @@ export default function SignUpForm() {
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
+      {/* <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
         <Link
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          {/* <ChevronLeftIcon /> */}
+          <ChevronLeftIcon />
           Kembali
         </Link>
-      </div>
+      </div> */}
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
@@ -335,7 +335,7 @@ export default function SignUpForm() {
                       name="firstName"
                       value={formData.firstName || ""}
                       onChange={handleInputChange}
-                      placeholder="Enter your first name"
+                      placeholder="Masukkan nama depan Anda"
                       className={errors.firstName ? "border-red-500" : ""}
                       disabled={loading}
                     />
@@ -356,7 +356,7 @@ export default function SignUpForm() {
                       name="lastName"
                       value={formData.lastName || ""}
                       onChange={handleInputChange}
-                      placeholder="Enter your last name"
+                      placeholder="Masukkan nama belakang Anda"
                       className={errors.lastName ? "border-red-500" : ""}
                       disabled={loading}
                     />
@@ -378,7 +378,7 @@ export default function SignUpForm() {
                     name="email"
                     value={formData.email || ""}
                     onChange={handleInputChange}
-                    placeholder="Enter your email"
+                    placeholder="Masukkan email Anda"
                     className={errors.email ? "border-red-500" : ""}
                     disabled={loading}
                   />
@@ -395,7 +395,7 @@ export default function SignUpForm() {
                   </Label>
                   <div className="relative">
                     <Input
-                      placeholder="Enter your password"
+                      placeholder="Masukkan password Anda"
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password || ""}

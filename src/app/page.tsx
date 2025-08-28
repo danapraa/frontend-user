@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image"; // Use Next.js Image component
+import Link from "next/link";
 import Navbar from "@/components/landing-page/Navbar";
 import Footer from "@/components/landing-page/Footer";
-import JobCard from "@/components/company/JobCard";
 import companiesData from "@/data/companies.json";
 import testimonialsData from "@/data/testimonials.json";
 import apiBissaKerja from "@/lib/api-bissa-kerja";
+import axios from "axios";
 import {
   Users,
   Building2,
@@ -18,9 +19,22 @@ import {
   UserPlus,
   Search,
   Send,
+  DollarSign,
+  Clock,
+  Calendar,
+  Heart,
+  Check,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 
 // Define TypeScript interfaces for type safety
+interface DisabilitasType {
+  id: number;
+  kategori_disabilitas: string;
+  tingkat_disabilitas: string;
+}
+
 interface Job {
   id: string;
   job_title: string;
@@ -33,6 +47,10 @@ interface Job {
   job_type: string;
   description: string;
   requirements?: string;
+  experience?: string;
+  application_deadline?: string;
+  skills?: string[];
+  disabilitas?: DisabilitasType[];
 }
 
 interface Company {
@@ -50,6 +68,17 @@ interface Testimonial {
   avatar: string;
 }
 
+interface ApplyStatusResponse {
+  success: boolean;
+  applied: boolean;
+  message?: string;
+}
+
+interface UserProfileResponse {
+  userProfileDataExist: boolean;
+  message?: string;
+}
+
 const LandingPage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
@@ -57,17 +86,388 @@ const LandingPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [errorJobs, setErrorJobs] = useState<string | null>(null);
+
+  // Authentication & Profile states
+  const [appliedJobs, setAppliedJobs] = useState<Set<string>>(new Set());
+  const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState<boolean>(false);
+  const [userProfileExists, setUserProfileExists] = useState<boolean>(false);
+  const [checkingProfile, setCheckingProfile] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(false);
+
+  // Modal state
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
   const companies: Company[] = companiesData;
   const testimonials: Testimonial[] = testimonialsData;
+
+  // Helper function to get company logo URL
+  const getCompanyLogoUrl = (
+    logo: string | null | undefined,
+    companyName: string
+  ): string => {
+    if (logo && logo.trim() !== "") {
+      return `${process.env.NEXT_PUBLIC_BASE_URL}/storage/${logo}`;
+    }
+    const encodedName = encodeURIComponent(companyName);
+    return `https://ui-avatars.com/api/?name=${encodedName}&length=2`;
+  };
+
+  // Helper function to calculate days remaining
+  const calculateDaysRemaining = (deadline: string): number => {
+    const today = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Cookie helper functions
+  const getCookie = (name: string): string | null => {
+    if (typeof document === "undefined") return null;
+
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop()?.split(";").shift() || null;
+    }
+    return null;
+  };
+
+  // Check user authentication using cookie
+  const checkUserAuth = (): boolean => {
+    try {
+      setCheckingAuth(true);
+
+      // Check for isLogin cookie
+      const isLoginCookie = getCookie("isLogin");
+      const isAuthenticated = isLoginCookie !== null && isLoginCookie !== "";
+
+      setIsLoggedIn(isAuthenticated);
+      return isAuthenticated;
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      setIsLoggedIn(false);
+      return false;
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  // Check user profile
+  const checkUserProfile = async (): Promise<boolean> => {
+    try {
+      setCheckingProfile(true);
+
+      const response = await apiBissaKerja.get<UserProfileResponse>(
+        "/check-user-profile"
+      );
+
+      if (response.data.userProfileDataExist === true) {
+        setUserProfileExists(true);
+        return true;
+      } else {
+        setUserProfileExists(false);
+        return false;
+      }
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        setIsLoggedIn(false);
+      }
+      setUserProfileExists(false);
+      return false;
+    } finally {
+      setCheckingProfile(false);
+    }
+  };
+
+  // Check apply status for all jobs
+  const checkAllApplyStatuses = async (jobsData: Job[]): Promise<void> => {
+    if (!isLoggedIn) return;
+
+    try {
+      setCheckingStatus(true);
+      const appliedJobIds = new Set<string>();
+
+      await Promise.all(
+        jobsData.map(async (job) => {
+          try {
+            const response = await apiBissaKerja.get<ApplyStatusResponse>(
+              `/check-apply-status/${job.id}`
+            );
+
+            if (response.data.success && response.data.applied === true) {
+              appliedJobIds.add(job.id);
+            }
+          } catch (error) {
+            // Ignore errors for jobs not applied
+          }
+        })
+      );
+
+      setAppliedJobs(appliedJobIds);
+    } catch (error) {
+      console.error("Error checking apply statuses:", error);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  // Handle apply click
+  const handleApplyClick = async (job: Job): Promise<void> => {
+    if (appliedJobs.has(job.id)) {
+      return;
+    }
+
+    // Check if user is logged in using cookie
+    const isAuthenticated = checkUserAuth();
+
+    if (!isAuthenticated) {
+      // Show login modal
+      setSelectedJob(job);
+      setShowProfileModal(true);
+      return;
+    }
+
+    // Then check profile completeness
+    const hasProfile = await checkUserProfile();
+
+    if (!hasProfile) {
+      // Show profile completion modal
+      setSelectedJob(job);
+      setShowProfileModal(true);
+      return;
+    }
+
+    // Proceed with application
+    await handleApply(job.id);
+  };
+
+  // Handle job application
+  const handleApply = async (jobId: string): Promise<void> => {
+    try {
+      setApplyingJobId(jobId);
+
+      const response = await apiBissaKerja.post(`apply-job/${jobId}`, {
+        lowongan_id: jobId,
+      });
+
+      if (response.data.success) {
+        setAppliedJobs((prev) => new Set(prev).add(jobId));
+      }
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        setIsLoggedIn(false);
+      }
+      console.error("Failed to apply for job:", error);
+    } finally {
+      setApplyingJobId(null);
+    }
+  };
+
+  // Job Card Component for Landing Page with Authentication
+  const LandingJobCard: React.FC<{ job: Job }> = ({ job }) => {
+    const companyName =
+      job.perusahaan_profile?.nama_perusahaan || "Unknown Company";
+    const companyLogo = job.perusahaan_profile?.logo;
+    const daysRemaining = job.application_deadline
+      ? calculateDaysRemaining(job.application_deadline)
+      : null;
+    const skills = job.skills?.slice(0, 4) || [];
+    const hasDisabilitySupport = job.disabilitas && job.disabilitas.length > 0;
+    const isApplied = appliedJobs.has(job.id);
+    const isApplying = applyingJobId === job.id;
+
+    const getApplyButtonConfig = () => {
+      if (isApplied) {
+        return {
+          text: "Sudah Dilamar",
+          className:
+            "flex-1 bg-green-600 text-center text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-75",
+          icon: Check,
+          disabled: true,
+        };
+      } else if (isApplying) {
+        return {
+          text: "Mengirim...",
+          className:
+            "flex-1 bg-blue-500 text-center text-white px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-75",
+          icon: Loader2,
+          disabled: true,
+        };
+      } else {
+        return {
+          text: "Lamar Sekarang",
+          className:
+            "flex-1 bg-brand-500 hover:bg-brand-600 text-center text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2",
+          icon: Send,
+          disabled: false,
+        };
+      }
+    };
+
+    const buttonConfig = getApplyButtonConfig();
+    const ButtonIcon = buttonConfig.icon;
+
+    return (
+      <article className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
+        <div className="flex-1">
+          {/* Header */}
+          <header className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <img
+                  src={getCompanyLogoUrl(companyLogo, companyName)}
+                  alt={`Logo ${companyName}`}
+                  className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-600"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const encodedName = encodeURIComponent(companyName);
+                    target.src = `https://ui-avatars.com/api/?name=${encodedName}&length=2`;
+                  }}
+                />
+                {hasDisabilitySupport && (
+                  <div
+                    className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1"
+                    title="Ramah disabilitas"
+                  >
+                    <Heart className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {job.job_title}
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                  {companyName}
+                </p>
+              </div>
+            </div>
+          </header>
+
+          {/* Job Details */}
+          <section className="space-y-2 mb-4">
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{job.location}</span>
+            </div>
+
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+              <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="truncate">
+                {job.salary_range || "Kompetitif"}
+              </span>
+            </div>
+
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+              <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span>{job.job_type}</span>
+            </div>
+
+            {job.experience && (
+              <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">{job.experience}</span>
+              </div>
+            )}
+          </section>
+
+          {/* Description */}
+          <div className="mb-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
+              {job.description}
+            </p>
+          </div>
+
+          {/* Skills */}
+          {skills.length > 0 && (
+            <section className="mb-4">
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill: string, index: number) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full"
+                    title={skill}
+                  >
+                    {skill}
+                  </span>
+                ))}
+                {job.skills && job.skills.length > 4 && (
+                  <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded-full">
+                    +{job.skills.length - 4} lagi
+                  </span>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Disability Support */}
+          {hasDisabilitySupport && (
+            <div className="mb-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Heart className="w-4 h-4 text-blue-600 flex-shrink-0 mr-2" />
+                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                    Mendukung Disabilitas:
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {job.disabilitas!.map((disability: DisabilitasType) => (
+                    <span
+                      key={disability.id}
+                      className="px-2 py-1 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                    >
+                      {disability.kategori_disabilitas} (
+                      {disability.tingkat_disabilitas})
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <footer className="flex space-x-3 mt-auto pt-4 border-t border-slate-100 dark:border-slate-700">
+          <button
+            onClick={() => handleApplyClick(job)}
+            disabled={buttonConfig.disabled}
+            className={buttonConfig.className}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ButtonIcon
+                className={`w-4 h-4 ${isApplying ? "animate-spin" : ""}`}
+              />
+              {buttonConfig.text}
+            </div>
+          </button>
+          <Link
+            href={`/cari-kerja/detail/${job.id}`}
+            className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 text-center"
+          >
+            Detail
+          </Link>
+        </footer>
+      </article>
+    );
+  };
 
   // Fetch jobs from backend
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoadingJobs(true);
-        const response = await apiBissaKerja.get("/company/job-vacancies");
+        const response = await apiBissaKerja.get("/job-vacancies");
         if (response.data.success) {
-          setJobs(response.data.data || []);
+          const jobsData = response.data.data || [];
+          setJobs(jobsData);
+
+          // Only check apply statuses if user is logged in
+          if (isLoggedIn) {
+            await checkAllApplyStatuses(jobsData);
+          }
         } else {
           setJobs([]);
           setErrorJobs("Tidak ada data lowongan ditemukan");
@@ -80,7 +480,58 @@ const LandingPage = () => {
       }
     };
     fetchJobs();
+  }, [isLoggedIn]);
+
+  // Initialize authentication and profile check
+  useEffect(() => {
+    const initializeAuth = async () => {
+      // Check authentication first using cookie
+      const authenticated = checkUserAuth();
+
+      // Only check profile if authenticated
+      if (authenticated) {
+        await checkUserProfile();
+      }
+    };
+
+    initializeAuth();
   }, []);
+
+  // Listen for cookie changes (when user logs in/out)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const authenticated = checkUserAuth();
+      if (authenticated !== isLoggedIn) {
+        // Authentication status changed, refresh data
+        if (authenticated) {
+          checkUserProfile();
+          // Refresh apply statuses
+          checkAllApplyStatuses(jobs);
+        } else {
+          setUserProfileExists(false);
+          setAppliedJobs(new Set());
+        }
+      }
+    };
+
+    // Listen for storage events (cross-tab login/logout)
+    window.addEventListener("storage", handleStorageChange);
+
+    // Check authentication periodically (in case cookie expires)
+    const authCheckInterval = setInterval(() => {
+      const authenticated = checkUserAuth();
+      if (!authenticated && isLoggedIn) {
+        // User was logged out (cookie expired)
+        setUserProfileExists(false);
+        setAppliedJobs(new Set());
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(authCheckInterval);
+    };
+  }, [isLoggedIn, jobs]);
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -88,7 +539,9 @@ const LandingPage = () => {
     if (savedTheme) {
       setDarkMode(savedTheme === "dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
       setDarkMode(prefersDark);
     }
     setMounted(true);
@@ -111,7 +564,9 @@ const LandingPage = () => {
   };
 
   const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setCurrentTestimonial(
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length
+    );
   };
 
   // Auto-slide testimonials
@@ -120,19 +575,19 @@ const LandingPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Remove custom themeChange event listener if not used
-  // If you have a mechanism to dispatch themeChange, you can re-add it
-
   if (!mounted) return null;
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${darkMode ? "dark" : ""}`}
+      className={`min-h-screen transition-colors duration-300 ${
+        darkMode ? "dark" : ""
+      }`}
     >
       <Navbar />
-      <main id="main-content" role="main">
+      <main id="main-content" role="main" className="">
+        {/* Hero Section */}
         <section
-          className="relative pt-20 sm:pt-24 pb-16 sm:pb-20 border-b border-slate-200 dark:border-slate-700 overflow-hidden"
+          className="relative min-h-screen pt-48 sm:pt-24 pb-16 sm:pb-20 border-b border-slate-200 dark:border-slate-700 overflow-hidden"
           aria-labelledby="hero-heading"
           role="banner"
         >
@@ -141,12 +596,12 @@ const LandingPage = () => {
               src="/images/disabilitas.jpg"
               alt="Hero background"
               fill
-              className="object-cover object-center"
+              className="object-cover object-top"
               priority
             />
-            <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/60"></div>
+            <div className="absolute inset-0 bg-slate-900/75 dark:bg-slate-900/80"></div>
           </div>
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="space-y-8 text-center lg:text-left">
                 <header className="space-y-6">
@@ -155,14 +610,13 @@ const LandingPage = () => {
                     className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight"
                   >
                     Solusi Profesional untuk
-                    <span className="text-slate-300 block"> Karier Inklusif</span>
+                    <span className="text-brand-400"> Karier Inklusif</span>
                   </h1>
-                  <p
-                    className="text-lg lg:text-xl text-slate-200 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-light"
-                  >
-                    Platform teknologi terdepan yang menghubungkan talenta terbaik
-                    dengan perusahaan progresif. Membangun ekosistem kerja yang
-                    inklusif, berkelanjutan, dan mengutamakan kesetaraan.
+                  <p className="text-lg lg:text-xl text-slate-200 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-light">
+                    Jatim Bissa adalah platform teknologi terdepan yang
+                    menghubungkan talenta terbaik dengan perusahaan progresif.
+                    Membangun ekosistem kerja yang inklusif, berkelanjutan, dan
+                    mengutamakan kesetaraan.
                   </p>
                 </header>
                 <div
@@ -210,6 +664,8 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* Methodology Section */}
         <section
           className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
           aria-labelledby="methodology-heading"
@@ -223,8 +679,8 @@ const LandingPage = () => {
                 Metodologi Profesional
               </h2>
               <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto font-light">
-                Pendekatan sistematis dan terstruktur untuk memastikan pengalaman
-                yang optimal dan hasil yang berkelanjutan
+                Pendekatan sistematis dan terstruktur untuk memastikan
+                pengalaman yang optimal dan hasil yang berkelanjutan
               </p>
             </header>
             <div
@@ -233,28 +689,24 @@ const LandingPage = () => {
             >
               {[
                 {
-                  step: "01",
                   icon: <UserPlus className="w-8 h-8" />,
                   title: "Registration & Onboarding",
                   description:
                     "Proses registrasi yang komprehensif dengan validasi identitas dan assessment kemampuan",
                 },
                 {
-                  step: "02",
                   icon: <FileText className="w-8 h-8" />,
                   title: "Profile Development",
                   description:
                     "Pengembangan profil profesional dengan bantuan konsultan karier bersertifikat",
                 },
                 {
-                  step: "03",
                   icon: <Search className="w-8 h-8" />,
                   title: "Intelligent Matching",
                   description:
                     "Sistem AI yang mencocokkan kandidat dengan peluang berdasarkan kompatibilitas holistik",
                 },
                 {
-                  step: "04",
                   icon: <Send className="w-8 h-8" />,
                   title: "Application & Follow-up",
                   description:
@@ -265,7 +717,6 @@ const LandingPage = () => {
                   key={index}
                   className="text-center group"
                   role="listitem"
-                  aria-label={`Tahap ${item.step}: ${item.title} - ${item.description}`}
                   tabIndex={0}
                 >
                   <div className="relative mb-8">
@@ -273,9 +724,6 @@ const LandingPage = () => {
                       <div className="text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors duration-300">
                         {item.icon}
                       </div>
-                    </div>
-                    <div className="absolute -top-2 -right-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center">
-                      {item.step}
                     </div>
                   </div>
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
@@ -289,6 +737,8 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* Services Section */}
         <section
           className="relative py-16 sm:py-20 border-b border-slate-200 dark:border-slate-700 overflow-hidden"
           aria-labelledby="services-heading"
@@ -376,6 +826,8 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* Job Opportunities Section */}
         <section
           className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700"
           aria-labelledby="opportunities-heading"
@@ -392,34 +844,67 @@ const LandingPage = () => {
                 Akses eksklusif ke posisi strategis dari perusahaan terkemuka
               </p>
             </header>
+
+            {/* Login Required Banner for Landing Page */}
+            {/* {!checkingAuth && !isLoggedIn && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Untuk melamar pekerjaan:</strong> Silakan login
+                      terlebih dahulu untuk dapat melamar posisi yang tersedia.
+                    </p>
+                  </div>
+                  <Link
+                    href="/login"
+                    className="ml-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-colors"
+                  >
+                    Login Sekarang
+                  </Link>
+                </div>
+              </div>
+            )} */}
+
+            {/* Profile Status Banner for Landing Page */}
+            {!checkingProfile && isLoggedIn && !userProfileExists && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mr-3 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      <strong>Profil belum lengkap:</strong> Lengkapi profil dan
+                      resume Anda untuk dapat melamar pekerjaan.
+                    </p>
+                  </div>
+                  <Link
+                    href="/resume"
+                    className="ml-3 text-sm bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-md transition-colors"
+                  >
+                    Lengkapi Profil
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {loadingJobs ? (
                 <div className="col-span-3 text-center py-8 text-slate-600 dark:text-slate-400">
-                  Memuat data...
+                  Memuat data lowongan...
+                  {checkingStatus && (
+                    <span className="block mt-2 text-blue-600 dark:text-blue-400">
+                      (Memeriksa status lamaran...)
+                    </span>
+                  )}
                 </div>
               ) : errorJobs ? (
                 <div className="col-span-3 text-center py-8 text-red-500">
                   {errorJobs}
                 </div>
               ) : jobs.length > 0 ? (
-                jobs.slice(0, 6).map((job) => (
-                  <div key={job.id}>
-                    <JobCard
-                      job={{
-                        id: job.id,
-                        title: job.job_title,
-                        company: job.perusahaan_profile?.nama_perusahaan ?? "Unknown Company",
-                        location: job.location,
-                        salary: job.salary_range,
-                        type: job.job_type,
-                        description: job.description,
-                        requirements: job.requirements?.split("\n") ?? [],
-                        logo: job.perusahaan_profile?.logo ?? "",
-                      }}
-                      urlDetail={`/cari-kerja/detail/${job.id}`}
-                    />
-                  </div>
-                ))
+                jobs
+                  .slice(0, 6)
+                  .map((job) => <LandingJobCard key={job.id} job={job} />)
               ) : (
                 <div className="col-span-3 text-center py-8 text-slate-600 dark:text-slate-400">
                   Tidak ada peluang tersedia
@@ -427,12 +912,17 @@ const LandingPage = () => {
               )}
             </div>
             <div className="text-center mt-16">
-              <button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-lg text-lg font-medium shadow-md hover:shadow-lg transition-all">
+              <Link
+                href="/cari-kerja"
+                className="inline-block bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-lg text-lg font-medium shadow-md hover:shadow-lg transition-all"
+              >
                 Eksplorasi Semua Peluang
-              </button>
+              </Link>
             </div>
           </div>
         </section>
+
+        {/* Testimonials Section */}
         <section
           className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-800 relative"
           aria-labelledby="testimonials-heading"
@@ -463,7 +953,11 @@ const LandingPage = () => {
                   kesuksesan.
                 </p>
               </header>
-              <div role="region" aria-label="Carousel testimoni profesional" aria-live="polite">
+              <div
+                role="region"
+                aria-label="Carousel testimoni profesional"
+                aria-live="polite"
+              >
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-lg border border-slate-200 dark:border-slate-700">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -505,6 +999,8 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* Partners Network Section */}
         <section
           className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700"
           aria-labelledby="network-heading"
@@ -553,6 +1049,88 @@ const LandingPage = () => {
           </div>
         </section>
       </main>
+
+      {/* Profile Warning/Login Modal */}
+      {showProfileModal && selectedJob && (
+        <div className="fixed inset-0 bg-gray-200/70 dark:bg-gray-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full">
+            {!isLoggedIn ? (
+              // Login Required Modal
+              <>
+                <div className="flex items-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-brand-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Anda Belum Login
+                  </h3>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  Untuk melamar posisi <strong>{selectedJob.job_title}</strong>{" "}
+                  di{" "}
+                  <strong>
+                    {selectedJob.perusahaan_profile?.nama_perusahaan ||
+                      "perusahaan ini"}
+                  </strong>
+                  , Anda perlu login terlebih dahulu.
+                </p>
+                <div className="flex gap-3">
+                  <Link
+                    href="/login"
+                    className="flex-1 bg-brand-500 hover:bg-brand-600 text-white text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Login Sekarang
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(false);
+                      setSelectedJob(null);
+                    }}
+                    className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Profile Completion Modal
+              <>
+                <div className="flex items-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-amber-600 mr-3" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Profil Belum Lengkap
+                  </h3>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  Untuk melamar posisi <strong>{selectedJob.job_title}</strong>{" "}
+                  di{" "}
+                  <strong>
+                    {selectedJob.perusahaan_profile?.nama_perusahaan ||
+                      "perusahaan ini"}
+                  </strong>
+                  , Anda perlu melengkapi profil dan resume terlebih dahulu.
+                </p>
+                <div className="flex gap-3">
+                  <Link
+                    href="/resume"
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Lengkapi Profil
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(false);
+                      setSelectedJob(null);
+                    }}
+                    className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

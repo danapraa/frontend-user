@@ -826,7 +826,7 @@ export default function LowonganPekerjaanPage() {
                       </div>
 
                       {/* Deadline Badge */}
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <div
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getDeadlineColorClass(
                             daysRemaining
@@ -845,7 +845,7 @@ export default function LowonganPekerjaanPage() {
                         >
                           {formatDate(job.application_deadline)}
                         </time>
-                      </div>
+                      </div> */}
 
                       {/* Actions */}
                       <footer

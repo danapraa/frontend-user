@@ -665,7 +665,7 @@ export default function JobVacancyPage() {
         </div>
 
         {/* Deadline */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <div
             className={`px-2 py-1 rounded-full text-xs font-medium ${getDeadlineColorClass(
               daysRemaining
@@ -679,7 +679,7 @@ export default function JobVacancyPage() {
           >
             {formatDate(job.application_deadline)}
           </time>
-        </div>
+        </div> */}
 
         {/* Actions */}
         <footer className="flex space-x-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">

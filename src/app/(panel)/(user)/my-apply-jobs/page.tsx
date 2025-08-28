@@ -160,10 +160,6 @@ export default function MyApplyJobPage() {
         setApplications(response.data.data || []);
       } else {
         setApplications([]);
-        console.log(
-          "API returned unsuccessful response:",
-          response.data.message
-        );
       }
     } catch (err) {
       console.error("Error fetching applications:", err);
