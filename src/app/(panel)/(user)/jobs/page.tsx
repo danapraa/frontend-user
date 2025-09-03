@@ -67,7 +67,9 @@ interface UserProfileResponse {
   success: boolean;
   message?: string;
   userProfileDataExist?: boolean;
-  data?: any;
+  data?: {
+    disabilitas?: DisabilitasType[];
+  };
 }
 
 type SortOption = "newest" | "oldest" | "salary-high" | "salary-low";
@@ -165,6 +167,9 @@ export default function JobVacancyPage() {
   const [applyingJobId, setApplyingJobId] = useState<number | null>(null);
   const [checkingStatus, setCheckingStatus] = useState<boolean>(false);
   const [userProfileExists, setUserProfileExists] = useState<boolean>(false);
+  const [userDisabilities, setUserDisabilities] = useState<DisabilitasType[]>(
+    []
+  );
   const [checkingProfile, setCheckingProfile] = useState<boolean>(false);
 
   // Modal state
@@ -214,7 +219,7 @@ export default function JobVacancyPage() {
     return `https://ui-avatars.com/api/?name=${encodedName}&length=2`;
   };
 
-  // Check user profile
+  // Check user profile and get user disabilities
   const checkUserProfile = async (): Promise<boolean> => {
     try {
       setCheckingProfile(true);
@@ -223,7 +228,19 @@ export default function JobVacancyPage() {
         "/check-user-profile"
       );
 
-      // Hanya cek userProfileDataExist
+      // Set user disabilities from profile data
+      if (response.data.data?.disabilitas) {
+        setUserDisabilities(response.data.data.disabilitas);
+
+        // Set default disability filter based on user's first disability
+        if (response.data.data.disabilitas.length > 0 && !disabilityFilter) {
+          setDisabilityFilter(
+            response.data.data.disabilitas[0].kategori_disabilitas
+          );
+        }
+      }
+
+      // Check if profile exists
       if (response.data.userProfileDataExist === true) {
         setUserProfileExists(true);
         return true;
@@ -361,8 +378,9 @@ export default function JobVacancyPage() {
 
   // Effects
   useEffect(() => {
-    fetchJobs();
-    checkUserProfile();
+    checkUserProfile().then(() => {
+      fetchJobs();
+    });
   }, []);
 
   // Get unique values for filters
@@ -419,7 +437,7 @@ export default function JobVacancyPage() {
     setShowLocationDropdown(true);
   };
 
-  // Filter and search logic
+  // Filter and search logic with default disability filter
   const filteredJobs = useMemo<JobVacancy[]>(() => {
     let filtered = jobs.filter((job) => {
       const matchesSearch =
@@ -436,6 +454,7 @@ export default function JobVacancyPage() {
         locationFilter === "" ||
         job.location.toLowerCase().includes(locationFilter.toLowerCase());
 
+      // Filter berdasarkan disabilitas - jika ada filter disabilitas
       const matchesDisability =
         disabilityFilter === "" ||
         job.disabilitas.some(
@@ -478,7 +497,12 @@ export default function JobVacancyPage() {
     setSearchTerm("");
     setLocationFilter("");
     setLocationInput("");
-    setDisabilityFilter("");
+    // Reset disability filter to user's disability if exists
+    if (userDisabilities.length > 0) {
+      setDisabilityFilter(userDisabilities[0].kategori_disabilitas);
+    } else {
+      setDisabilityFilter("");
+    }
     setTypeFilter("");
     setSortBy("newest");
     setShowLocationDropdown(false);
@@ -487,7 +511,9 @@ export default function JobVacancyPage() {
   const hasActiveFilters: boolean = !!(
     searchTerm ||
     locationFilter ||
-    disabilityFilter ||
+    (disabilityFilter && userDisabilities.length > 0
+      ? disabilityFilter !== userDisabilities[0].kategori_disabilitas
+      : disabilityFilter) ||
     typeFilter ||
     sortBy !== "newest"
   );
@@ -664,23 +690,6 @@ export default function JobVacancyPage() {
           )}
         </div>
 
-        {/* Deadline */}
-        {/* <div className="flex items-center justify-between">
-          <div
-            className={`px-2 py-1 rounded-full text-xs font-medium ${getDeadlineColorClass(
-              daysRemaining
-            )}`}
-          >
-            {daysRemaining > 0 ? `${daysRemaining} hari lagi` : "Berakhir"}
-          </div>
-          <time
-            className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-            dateTime={job.application_deadline}
-          >
-            {formatDate(job.application_deadline)}
-          </time>
-        </div> */}
-
         {/* Actions */}
         <footer className="flex space-x-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
           <button
@@ -808,6 +817,12 @@ export default function JobVacancyPage() {
               {!checkingProfile && !userProfileExists && (
                 <span className="ml-2 text-amber-600 dark:text-amber-400">
                   (Profil belum lengkap)
+                </span>
+              )}
+              {userDisabilities.length > 0 && (
+                <span className="ml-2 text-green-600 dark:text-green-400">
+                  (Filter sesuai disabilitas:{" "}
+                  {userDisabilities[0].kategori_disabilitas})
                 </span>
               )}
             </div>
@@ -956,6 +971,29 @@ export default function JobVacancyPage() {
           )}
         </div>
 
+        {/* User Disability Info Banner */}
+        {userDisabilities.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center">
+              <Heart className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Filter Otomatis:</strong> Lowongan ditampilkan sesuai
+                  dengan jenis disabilitas Anda (
+                  {userDisabilities[0].kategori_disabilitas}). Anda dapat
+                  mengubah filter untuk melihat lowongan lainnya.
+                </p>
+              </div>
+              <button
+                onClick={() => setDisabilityFilter("")}
+                className="ml-3 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-colors"
+              >
+                Tampilkan Semua
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Profile Status Banner */}
         {!checkingProfile && !userProfileExists && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
@@ -1003,14 +1041,25 @@ export default function JobVacancyPage() {
                   </button>
                 </span>
               )}
-              {disabilityFilter && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-sm rounded-full">
-                  ♿ {disabilityFilter}
-                  <button onClick={() => setDisabilityFilter("")}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              )}
+              {disabilityFilter &&
+                (userDisabilities.length === 0 ||
+                  disabilityFilter !==
+                    userDisabilities[0].kategori_disabilitas) && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-sm rounded-full">
+                    ♿ {disabilityFilter}
+                    <button
+                      onClick={() =>
+                        setDisabilityFilter(
+                          userDisabilities.length > 0
+                            ? userDisabilities[0].kategori_disabilitas
+                            : ""
+                        )
+                      }
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
               {typeFilter && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-sm rounded-full">
                   ⏰ {typeFilter}
@@ -1039,7 +1088,9 @@ export default function JobVacancyPage() {
               Tidak ada lowongan ditemukan
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Coba ubah kata kunci pencarian atau filter yang Anda gunakan
+              {userDisabilities.length > 0 && disabilityFilter
+                ? `Tidak ada lowongan untuk jenis disabilitas "${disabilityFilter}". Coba ubah filter atau lihat lowongan lainnya.`
+                : "Coba ubah kata kunci pencarian atau filter yang Anda gunakan"}
             </p>
             <button
               onClick={clearFilters}

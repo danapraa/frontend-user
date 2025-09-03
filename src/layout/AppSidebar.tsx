@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Send,
   FileCheck,
+  Users, // Icon untuk TalentPull
 } from "lucide-react";
 import AppSidebarSkeleton from "@/skeleton/AppSidebarSkeleton";
 
@@ -68,6 +69,12 @@ const MAIN_MENU_ITEMS: NavItem[] = [
     icon: <User size={20} />,
     name: "Profile Perusahaan",
     path: "/profile-perusahaan",
+    allowedRoles: ["perusahaan"],
+  },
+  {
+    icon: <Users size={20} />,
+    name: "TalentPull",
+    path: "/talentpull",
     allowedRoles: ["perusahaan"],
   },
   {
